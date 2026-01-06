@@ -1,0 +1,453 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- CONFIGURAÇÃO PWA -->
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <title>JDP EDITOR v2.0 | ANDROID SAFE</title>
+    
+    <!-- MOTOR GRÁFICO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root { --gold: #f59e0b; --dark: #000000; --glass: rgba(20, 20, 20, 0.90); --neon: #00f3ff; --red: #ef4444; }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--dark); 
+            color: white; 
+            margin: 0; padding: 0; 
+            overflow: hidden; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent; 
+            height: 100vh; width: 100vw;
+            display: flex; flex-direction: column;
+        }
+
+        /* --- PALCO DE CRIAÇÃO --- */
+        #palco-criacao { 
+            flex: 1; position: relative; overflow: hidden; 
+            background: radial-gradient(circle, #222 0%, #000 100%); 
+            touch-action: none; width: 100%; height: 100%;
+        }
+
+        #layer-fundo { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            z-index: 0; pointer-events: none; 
+        }
+        #layer-fundo video, #layer-fundo img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- ELEMENTOS --- */
+        .elemento-studio { 
+            position: absolute; cursor: grab; user-select: none; 
+            display: flex; align-items: center; justify-content: center; 
+            z-index: 10; transition: box-shadow 0.2s;
+        }
+        .elemento-studio.selecionado { 
+            border: 2px dashed var(--gold); 
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); 
+            z-index: 100 !important; 
+        }
+        .btn-fechar-item { 
+            position: absolute; top: -15px; right: -15px; 
+            width: 30px; height: 30px; background: var(--red); color: white; 
+            border-radius: 50%; border: 2px solid white; 
+            display: none; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 14px; cursor: pointer; z-index: 200; 
+        }
+        .elemento-studio.selecionado .btn-fechar-item { display: flex; }
+        .elemento-studio img, .elemento-studio video { 
+            width: 100%; height: 100%; pointer-events: none; display: block; 
+            object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .elemento-studio div[contenteditable] { 
+            padding: 10px; color: white; font-weight: bold; 
+            text-shadow: 3px 3px 0px #000; font-size: 32px; 
+            text-transform: uppercase; font-family: 'Impact', sans-serif; 
+            letter-spacing: 2px; text-align: center; min-width: 100px;
+        }
+
+        /* EFEITOS */
+        .efeito-vida { animation: respirar 3s infinite ease-in-out; }
+        @keyframes respirar { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* --- INTERFACE --- */
+        .dock-ferramentas { 
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); 
+            display: flex; gap: 15px; background: var(--glass); 
+            padding: 15px 30px; border-radius: 50px; backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255,255,255,0.15); z-index: 200; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
+        }
+        .btn-float { 
+            width: 50px; height: 50px; border-radius: 50%; border: none; 
+            background: #333; color: white; font-size: 22px; flex-shrink: 0; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s; cursor: pointer;
+        }
+        .btn-float:active { transform: scale(0.9); background: var(--gold); color: black; }
+
+        .top-bar {
+            position: absolute; top: 20px; left: 20px; right: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 300; pointer-events: none;
+        }
+        .top-bar * { pointer-events: auto; }
+        .logo-jdp { font-size: 12px; color: #666; letter-spacing: 2px; font-weight: bold; }
+        .btn-exportar {
+            background: linear-gradient(90deg, var(--gold), #d97706);
+            color: black; padding: 10px 25px; border-radius: 30px;
+            font-weight: bold; border: none; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+            cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;
+        }
+
+        /* MENUS */
+        #menu-fundo { 
+            position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%); 
+            background: #222; padding: 15px; border-radius: 20px; 
+            border: 1px solid var(--gold); display: none; gap: 10px; z-index: 201; 
+        }
+        #controle-zoom { 
+            position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%); 
+            width: 60%; background: rgba(0,0,0,0.8); padding: 15px; 
+            border-radius: 20px; display: none; z-index: 200; 
+            text-align: center; border: 1px solid var(--gold); 
+        }
+        #controle-zoom input { width: 100%; accent-color: var(--gold); }
+
+        /* MODAL */
+        #modal-export {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 500;
+            align-items: center; justify-content: center; flex-direction: column;
+        }
+        .card-export {
+            background: #111; border: 1px solid var(--gold); padding: 30px;
+            border-radius: 20px; width: 80%; max-width: 300px; text-align: center;
+        }
+        .btn-opt {
+            width: 100%; padding: 15px; margin: 5px 0; border-radius: 10px; border: none;
+            font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        
+        /* STATUS */
+        #status-gravacao {
+            position: absolute; top: 70px; right: 20px;
+            background: rgba(255, 0, 0, 0.8); color: white;
+            padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px;
+            display: none; align-items: center; gap: 5px; z-index: 4000;
+            animation: piscarRec 1s infinite;
+        }
+        @keyframes piscarRec { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        #audio-player { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="logo-jdp">JDP EDITOR v2.0</div>
+        <button class="btn-exportar" onclick="abrirModalExport()">💾 SALVAR</button>
+    </div>
+
+    <div id="status-gravacao">🔴 REC <span id="timer-rec">00</span>s</div>
+
+    <div id="palco-criacao" onclick="deselecionarTudo(event)">
+        <!-- O atributo data-tipo será crucial aqui -->
+        <div id="layer-fundo" data-tipo="cor"></div>
+    </div>
+
+    <audio id="audio-player" loop></audio>
+
+    <div id="controle-zoom">
+        <label style="color:var(--gold); font-size:12px; font-weight:bold; display:block; margin-bottom:5px;">ZOOM</label>
+        <input type="range" min="20" max="400" value="100" oninput="ajustarZoom(this.value)">
+    </div>
+
+    <div id="menu-fundo">
+        <button class="btn-float" onclick="setFundoCor('#000')" style="background:black; border:1px solid #333;"></button>
+        <button class="btn-float" onclick="setFundoCor('#f59e0b')" style="background:var(--gold);"></button>
+        <label class="btn-float" style="background:#444;">🖼️ <input type="file" accept="image/*" style="display:none" onchange="setFundoMidia(this, 'img')"></label>
+        <label class="btn-float" style="background:#444; border:1px solid red;">🎥 <input type="file" accept="video/*" style="display:none" onchange="setFundoMidia(this, 'video')"></label>
+    </div>
+
+    <div class="dock-ferramentas">
+        <button class="btn-float" onclick="toggleMenuFundo()" title="Fundo">🎨</button>
+        <label class="btn-float" title="Add Foto">📷 <input type="file" accept="image/*" style="display:none" onchange="addItem(this, 'img')"></label>
+        <label class="btn-float" title="Add Vídeo">🎥 <input type="file" accept="video/*" style="display:none" onchange="addItem(this, 'video')"></label>
+        <label class="btn-float" title="Add Música" style="border:1px solid var(--neon);">🎵 <input type="file" accept="audio/*" style="display:none" onchange="addMusica(this)"></label>
+        <button class="btn-float" onclick="addTexto()" title="Texto">📝</button>
+        <button class="btn-float" onclick="toggleVida()" title="Animar">🧬</button>
+    </div>
+
+    <div id="modal-export">
+        <div class="card-export">
+            <h3 style="color:var(--gold); margin-top:0;">EXPORTAR</h3>
+            <p id="aviso-tipo-fundo" style="font-size:11px; color:#999; margin-bottom:15px;"></p>
+            
+            <button class="btn-opt" style="background:#3b82f6; color:white;" onclick="baixarFoto()">
+                📸 SALVAR IMAGEM (JPG)
+            </button>
+            
+            <button class="btn-opt" style="background:var(--red); color:white;" onclick="iniciarGravacao(15)">
+                🎥 VÍDEO STORY (15s)
+            </button>
+            
+            <button class="btn-opt" style="background:var(--red); color:white;" onclick="iniciarGravacao(30)">
+                🎥 VÍDEO STATUS (30s)
+            </button>
+
+            <button class="btn-opt" style="background:#333; color:#ccc; margin-top:15px;" onclick="document.getElementById('modal-export').style.display='none'">CANCELAR</button>
+        </div>
+    </div>
+
+    <script>
+        /* --- JDP ENGINE v2.0 - ANDROID SAFE --- */
+        
+        let elementoSelecionado = null;
+        let offset = { x: 0, y: 0 };
+        let modoGravacaoAtivo = false;
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        /* --- INTELIGÊNCIA DE FUNDO --- */
+        function toggleMenuFundo() {
+            const menu = document.getElementById('menu-fundo');
+            document.getElementById('controle-zoom').style.display = 'none';
+            menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function setFundoCor(cor) {
+            const layer = document.getElementById('layer-fundo');
+            layer.innerHTML = ''; 
+            layer.style.background = cor; 
+            layer.setAttribute('data-tipo', 'cor'); // Marca como cor
+            toggleMenuFundo();
+        }
+
+        function setFundoMidia(input, tipo) {
+            const file = input.files[0]; if (!file) return;
+            const url = URL.createObjectURL(file);
+            const layer = document.getElementById('layer-fundo');
+            layer.style.background = 'transparent';
+            
+            if(tipo === 'video') {
+                layer.innerHTML = `<video id="video-bg" src="${url}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover;"></video>`;
+                layer.setAttribute('data-tipo', 'video'); // Marca como vídeo
+            } else {
+                layer.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">`;
+                layer.setAttribute('data-tipo', 'imagem'); // Marca como imagem
+            }
+            toggleMenuFundo();
+        }
+
+        /* --- GESTÃO DE ITENS --- */
+        function criarContainer(conteudoHTML, tipo) {
+            const div = document.createElement('div'); div.className = 'elemento-studio'; 
+            div.style.top = '30%'; div.style.left = '30%';
+            if(tipo === 'midia') { div.style.width = '200px'; div.style.height = 'auto'; }
+            
+            const btnX = document.createElement('div'); btnX.className = 'btn-fechar-item'; btnX.innerText = 'X';
+            btnX.onclick = (e) => { e.stopPropagation(); div.remove(); document.getElementById('controle-zoom').style.display='none'; };
+            
+            div.innerHTML = conteudoHTML; div.appendChild(btnX);
+            configurarInteracao(div); document.getElementById('palco-criacao').appendChild(div); selecionarElemento(div);
+        }
+
+        function addItem(input, tipo) {
+            const file = input.files[0]; if (!file) return;
+            const url = URL.createObjectURL(file);
+            criarContainer(tipo === 'video' ? `<video src="${url}" autoplay loop muted playsinline></video>` : `<img src="${url}">`, 'midia');
+        }
+
+        function addTexto() {
+            const texto = prompt("Digite o texto:", "OFERTA"); if(!texto) return;
+            criarContainer(`<div contenteditable="true" style="color:var(--gold);">${texto}</div>`, 'texto');
+        }
+
+        function addMusica(input) {
+            const file = input.files[0]; if(!file) return;
+            const audio = document.getElementById('audio-player');
+            audio.src = URL.createObjectURL(file);
+            audio.play();
+            alert("🎵 Música carregada!");
+        }
+
+        /* --- INTERAÇÃO --- */
+        function configurarInteracao(el) {
+            el.addEventListener('touchstart', (e) => {
+                if(e.target.className === 'btn-fechar-item' || modoGravacaoAtivo) return;
+                selecionarElemento(el);
+                const touch = e.touches[0]; offset.x = touch.clientX - el.offsetLeft; offset.y = touch.clientY - el.offsetTop;
+            });
+            el.addEventListener('touchmove', (e) => {
+                 if(modoGravacaoAtivo) return;
+                e.preventDefault(); const touch = e.touches[0];
+                el.style.left = (touch.clientX - offset.x) + 'px'; el.style.top = (touch.clientY - offset.y) + 'px';
+            });
+            el.addEventListener('mousedown', (e) => {
+                if(e.target.className === 'btn-fechar-item' || modoGravacaoAtivo) return;
+                selecionarElemento(el); offset.x = e.clientX - el.offsetLeft; offset.y = e.clientY - el.offsetTop;
+                document.onmousemove = (ev) => { ev.preventDefault(); el.style.left = (ev.clientX - offset.x) + 'px'; el.style.top = (ev.clientY - offset.y) + 'px'; };
+                document.onmouseup = () => { document.onmousemove = null; document.onmouseup = null; };
+            });
+        }
+
+        function selecionarElemento(el) {
+            if(modoGravacaoAtivo) return;
+            document.querySelectorAll('.elemento-studio').forEach(e => e.classList.remove('selecionado'));
+            elementoSelecionado = el; el.classList.add('selecionado');
+            document.getElementById('menu-fundo').style.display = 'none';
+            document.getElementById('controle-zoom').style.display = 'block';
+            const scale = el.style.transform.replace(/[^0-9.]/g, '') || 1; 
+            document.querySelector('#controle-zoom input').value = scale * 100;
+        }
+
+        function deselecionarTudo(e) {
+            if(modoGravacaoAtivo) return;
+            if(e.target.id === 'palco-criacao' || e.target.id === 'layer-fundo') {
+                document.querySelectorAll('.elemento-studio').forEach(e => e.classList.remove('selecionado'));
+                elementoSelecionado = null; document.getElementById('controle-zoom').style.display = 'none'; document.getElementById('menu-fundo').style.display = 'none';
+            }
+        }
+
+        function ajustarZoom(valor) { if(elementoSelecionado) elementoSelecionado.style.transform = `scale(${valor / 100})`; }
+        function toggleVida() { if(elementoSelecionado) elementoSelecionado.classList.toggle('efeito-vida'); else alert("Selecione um item!"); }
+
+        /* --- LÓGICA DE EXPORTAÇÃO INTELIGENTE --- */
+        function abrirModalExport() {
+            const tipoFundo = document.getElementById('layer-fundo').getAttribute('data-tipo');
+            const aviso = document.getElementById('aviso-tipo-fundo');
+            
+            if(tipoFundo === 'video') {
+                aviso.innerText = "⚠️ Fundo de VÍDEO detectado. A opção 'Salvar Imagem' pode gerar uma tela preta. Recomendamos 'Gravar Vídeo'.";
+                aviso.style.color = "#f59e0b";
+            } else {
+                aviso.innerText = "Fundo estático. Todas as opções disponíveis.";
+                aviso.style.color = "#999";
+            }
+            document.getElementById('modal-export').style.display = 'flex';
+        }
+
+        function baixarFoto() {
+            const tipoFundo = document.getElementById('layer-fundo').getAttribute('data-tipo');
+            if(tipoFundo === 'video') {
+                if(!confirm("⚠️ ATENÇÃO: Você tem um vídeo no fundo. Salvar como FOTO pode resultar em um fundo preto. Deseja continuar mesmo assim?")) return;
+            }
+
+            document.getElementById('modal-export').style.display = 'none';
+            prepararCaptura();
+            
+            setTimeout(() => {
+                html2canvas(document.getElementById('palco-criacao'), { backgroundColor: null, useCORS: true, scale: 2 }).then(canvas => {
+                    const link = document.createElement('a'); link.download = 'jdp-arte.jpg'; link.href = canvas.toDataURL('image/jpeg', 0.9); link.click();
+                    restaurarUI();
+                });
+            }, 500);
+        }
+
+        /* --- MOTOR DE GRAVAÇÃO (ANDROID SAFE) --- */
+        async function iniciarGravacao(segundos) {
+            document.getElementById('modal-export').style.display = 'none';
+            
+            try {
+                // 1. Solicita captura de tela com áudio
+                const stream = await navigator.mediaDevices.getDisplayMedia({ 
+                    video: { mediaSource: "screen" }, 
+                    audio: true 
+                });
+                
+                modoGravacaoAtivo = true;
+                prepararCaptura();
+                
+                // 2. SINCRONIZAÇÃO: Reinicia o vídeo de fundo para começar junto com a gravação
+                const bgVideo = document.getElementById('video-bg');
+                if(bgVideo) {
+                    bgVideo.currentTime = 0;
+                    bgVideo.play();
+                }
+
+                // 3. Toca áudio e vídeos extras
+                const audio = document.getElementById('audio-player'); if(audio.src) audio.play();
+                document.querySelectorAll('video').forEach(v => { if(v.id !== 'video-bg') v.play(); });
+
+                // 4. Configura Gravador com MimeType compatível (Tentativa MP4 -> WebM)
+                let options = { mimeType: 'video/webm;codecs=vp9' };
+                if (MediaRecorder.isTypeSupported('video/mp4')) {
+                    options = { mimeType: 'video/mp4' };
+                } else if (MediaRecorder.isTypeSupported('video/webm;codecs=h264')) {
+                    options = { mimeType: 'video/webm;codecs=h264' }; // Melhor para Android se MP4 nativo falhar
+                }
+
+                mediaRecorder = new MediaRecorder(stream, options);
+                recordedChunks = [];
+
+                mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                
+                mediaRecorder.onstop = () => {
+                    // Cria o arquivo final
+                    const blob = new Blob(recordedChunks, { type: options.mimeType });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.style.display = "none";
+                    a.href = url;
+                    
+                    // TRUQUE PARA ANDROID: Se for WebM, tentamos nomear .mp4 se o codec for h264, 
+                    // mas para segurança, mantemos .webm se for vp8/9.
+                    // O Android moderno lê .webm, mas o WhatsApp as vezes reclama.
+                    a.download = `jdp-video-${segundos}s.webm`; 
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    stream.getTracks().forEach(track => track.stop());
+                    restaurarUI();
+                    
+                    alert("✅ VÍDEO SALVO!\nSe o WhatsApp não aceitar o arquivo, use um app 'Conversor de Vídeo' para MP4.");
+                };
+
+                mediaRecorder.start();
+                
+                // Timer Visual
+                const status = document.getElementById('status-gravacao');
+                status.style.display = 'flex';
+                let tempoRestante = segundos;
+                
+                const intervalo = setInterval(() => {
+                    tempoRestante--;
+                    document.getElementById('timer-rec').innerText = tempoRestante < 10 ? '0'+tempoRestante : tempoRestante;
+                    if(tempoRestante <= 0) {
+                        clearInterval(intervalo);
+                        mediaRecorder.stop();
+                    }
+                }, 1000);
+
+            } catch (err) {
+                console.error(err);
+                alert("⚠️ Erro ao iniciar gravação.\nCertifique-se de conceder permissão de compartilhamento de tela.");
+                restaurarUI();
+            }
+        }
+
+        function prepararCaptura() {
+            document.querySelectorAll('.selecionado').forEach(e => e.classList.remove('selecionado'));
+            document.querySelector('.dock-ferramentas').style.display = 'none';
+            document.querySelector('.top-bar').style.display = 'none';
+            document.getElementById('controle-zoom').style.display = 'none';
+            document.getElementById('menu-fundo').style.display = 'none';
+        }
+
+        function restaurarUI() {
+            modoGravacaoAtivo = false;
+            document.querySelector('.dock-ferramentas').style.display = 'flex';
+            document.querySelector('.top-bar').style.display = 'flex';
+            document.getElementById('status-gravacao').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
