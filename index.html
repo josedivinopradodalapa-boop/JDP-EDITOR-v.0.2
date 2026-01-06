@@ -10,13 +10,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-capable" content="yes">
 
-    <title>JDP EDITOR v2.0 | ANDROID SAFE</title>
+    <title>JDP EDITOR v2.1 | HYPER-DRIVE</title>
     
     <!-- MOTOR GRÁFICO -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        :root { --gold: #f59e0b; --dark: #000000; --glass: rgba(20, 20, 20, 0.90); --neon: #00f3ff; --red: #ef4444; }
+        :root { --gold: #f59e0b; --dark: #000000; --glass: rgba(20, 20, 20, 0.95); --neon: #00f3ff; --red: #ef4444; --blue: #3b82f6; }
         
         body { 
             font-family: 'Segoe UI', sans-serif; 
@@ -26,15 +27,15 @@
             overflow: hidden; 
             user-select: none; 
             -webkit-tap-highlight-color: transparent; 
-            height: 100vh; width: 100vw;
-            display: flex; flex-direction: column;
+            height: 100vh; width: 100vw; 
+            display: flex; flex-direction: column; 
         }
 
         /* --- PALCO DE CRIAÇÃO --- */
         #palco-criacao { 
             flex: 1; position: relative; overflow: hidden; 
             background: radial-gradient(circle, #222 0%, #000 100%); 
-            touch-action: none; width: 100%; height: 100%;
+            touch-action: none; width: 100%; height: 100%; 
         }
 
         #layer-fundo { 
@@ -47,7 +48,7 @@
         .elemento-studio { 
             position: absolute; cursor: grab; user-select: none; 
             display: flex; align-items: center; justify-content: center; 
-            z-index: 10; transition: box-shadow 0.2s;
+            z-index: 10; transition: box-shadow 0.2s; 
         }
         .elemento-studio.selecionado { 
             border: 2px dashed var(--gold); 
@@ -64,13 +65,13 @@
         .elemento-studio.selecionado .btn-fechar-item { display: flex; }
         .elemento-studio img, .elemento-studio video { 
             width: 100%; height: 100%; pointer-events: none; display: block; 
-            object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
         }
         .elemento-studio div[contenteditable] { 
             padding: 10px; color: white; font-weight: bold; 
             text-shadow: 3px 3px 0px #000; font-size: 32px; 
             text-transform: uppercase; font-family: 'Impact', sans-serif; 
-            letter-spacing: 2px; text-align: center; min-width: 100px;
+            letter-spacing: 2px; text-align: center; min-width: 100px; 
         }
 
         /* EFEITOS */
@@ -89,23 +90,27 @@
             width: 50px; height: 50px; border-radius: 50%; border: none; 
             background: #333; color: white; font-size: 22px; flex-shrink: 0; 
             display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s; cursor: pointer; 
         }
         .btn-float:active { transform: scale(0.9); background: var(--gold); color: black; }
 
-        .top-bar {
-            position: absolute; top: 20px; left: 20px; right: 20px;
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 300; pointer-events: none;
+        .top-bar { 
+            position: absolute; top: 20px; left: 20px; right: 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            z-index: 300; pointer-events: none; 
         }
         .top-bar * { pointer-events: auto; }
         .logo-jdp { font-size: 12px; color: #666; letter-spacing: 2px; font-weight: bold; }
-        .btn-exportar {
-            background: linear-gradient(90deg, var(--gold), #d97706);
-            color: black; padding: 10px 25px; border-radius: 30px;
-            font-weight: bold; border: none; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
-            cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px;
+        
+        /* BOTÃO SALVAR ELEVADO */
+        .btn-exportar { 
+            background: linear-gradient(135deg, var(--gold), #d97706); 
+            color: black; padding: 10px 25px; border-radius: 30px; 
+            font-weight: bold; border: none; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); 
+            cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; 
+            transition: transform 0.2s;
         }
+        .btn-exportar:active { transform: scale(0.95); }
 
         /* MENUS */
         #menu-fundo { 
@@ -121,41 +126,51 @@
         }
         #controle-zoom input { width: 100%; accent-color: var(--gold); }
 
-        /* MODAL */
-        #modal-export {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 500;
-            align-items: center; justify-content: center; flex-direction: column;
+        /* MODAL EXPORTAÇÃO */
+        #modal-export { 
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.95); z-index: 500; 
+            align-items: center; justify-content: center; flex-direction: column; 
         }
-        .card-export {
-            background: #111; border: 1px solid var(--gold); padding: 30px;
-            border-radius: 20px; width: 80%; max-width: 300px; text-align: center;
+        .card-export { 
+            background: #111; border: 1px solid var(--gold); padding: 30px; 
+            border-radius: 20px; width: 85%; max-width: 320px; text-align: center; 
+            box-shadow: 0 0 50px rgba(245, 158, 11, 0.2);
         }
-        .btn-opt {
-            width: 100%; padding: 15px; margin: 5px 0; border-radius: 10px; border: none;
-            font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+        .btn-opt { 
+            width: 100%; padding: 16px; margin: 8px 0; border-radius: 12px; border: none; 
+            font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; 
+            font-size: 14px; transition: all 0.2s;
         }
+        .btn-opt:active { transform: scale(0.98); opacity: 0.8; }
         
         /* STATUS */
-        #status-gravacao {
-            position: absolute; top: 70px; right: 20px;
-            background: rgba(255, 0, 0, 0.8); color: white;
-            padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px;
-            display: none; align-items: center; gap: 5px; z-index: 4000;
-            animation: piscarRec 1s infinite;
+        #status-gravacao { 
+            position: absolute; top: 70px; right: 20px; 
+            background: rgba(220, 38, 38, 0.9); color: white; 
+            padding: 8px 20px; border-radius: 30px; font-weight: bold; font-size: 12px; 
+            display: none; align-items: center; gap: 8px; z-index: 4000; 
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
+            animation: piscarRec 1s infinite; 
         }
-        @keyframes piscarRec { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes piscarRec { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         #audio-player { display: none; }
+        
+        /* LOADER */
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-left-color: var(--gold); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div class="logo-jdp">JDP EDITOR v2.0</div>
-        <button class="btn-exportar" onclick="abrirModalExport()">💾 SALVAR</button>
+        <div class="logo-jdp">JDP EDITOR v2.1</div>
+        <button class="btn-exportar" onclick="abrirModalExport()">
+            <i class="fas fa-save"></i> FINALIZAR
+        </button>
     </div>
 
-    <div id="status-gravacao">🔴 REC <span id="timer-rec">00</span>s</div>
+    <div id="status-gravacao"><i class="fas fa-circle"></i> GRAVANDO <span id="timer-rec">00</span>s</div>
 
     <div id="palco-criacao" onclick="deselecionarTudo(event)">
         <!-- O atributo data-tipo será crucial aqui -->
@@ -172,42 +187,52 @@
     <div id="menu-fundo">
         <button class="btn-float" onclick="setFundoCor('#000')" style="background:black; border:1px solid #333;"></button>
         <button class="btn-float" onclick="setFundoCor('#f59e0b')" style="background:var(--gold);"></button>
-        <label class="btn-float" style="background:#444;">🖼️ <input type="file" accept="image/*" style="display:none" onchange="setFundoMidia(this, 'img')"></label>
-        <label class="btn-float" style="background:#444; border:1px solid red;">🎥 <input type="file" accept="video/*" style="display:none" onchange="setFundoMidia(this, 'video')"></label>
+        <label class="btn-float" style="background:#444;">
+            <i class="fas fa-image"></i> 
+            <input type="file" accept="image/*" style="display:none" onchange="setFundoMidia(this, 'img')">
+        </label>
+        <label class="btn-float" style="background:#444; border:1px solid red;">
+            <i class="fas fa-video"></i> 
+            <input type="file" accept="video/*" style="display:none" onchange="setFundoMidia(this, 'video')">
+        </label>
     </div>
 
     <div class="dock-ferramentas">
-        <button class="btn-float" onclick="toggleMenuFundo()" title="Fundo">🎨</button>
-        <label class="btn-float" title="Add Foto">📷 <input type="file" accept="image/*" style="display:none" onchange="addItem(this, 'img')"></label>
-        <label class="btn-float" title="Add Vídeo">🎥 <input type="file" accept="video/*" style="display:none" onchange="addItem(this, 'video')"></label>
-        <label class="btn-float" title="Add Música" style="border:1px solid var(--neon);">🎵 <input type="file" accept="audio/*" style="display:none" onchange="addMusica(this)"></label>
-        <button class="btn-float" onclick="addTexto()" title="Texto">📝</button>
-        <button class="btn-float" onclick="toggleVida()" title="Animar">🧬</button>
+        <button class="btn-float" onclick="toggleMenuFundo()" title="Fundo"><i class="fas fa-fill-drip"></i></button>
+        <label class="btn-float" title="Add Foto"><i class="fas fa-camera"></i> <input type="file" accept="image/*" style="display:none" onchange="addItem(this, 'img')"></label>
+        <label class="btn-float" title="Add Vídeo"><i class="fas fa-film"></i> <input type="file" accept="video/*" style="display:none" onchange="addItem(this, 'video')"></label>
+        <label class="btn-float" title="Add Música" style="border:1px solid var(--neon);"><i class="fas fa-music"></i> <input type="file" accept="audio/*" style="display:none" onchange="addMusica(this)"></label>
+        <button class="btn-float" onclick="addTexto()" title="Texto"><i class="fas fa-font"></i></button>
+        <button class="btn-float" onclick="toggleVida()" title="Animar"><i class="fas fa-bolt"></i></button>
     </div>
 
     <div id="modal-export">
         <div class="card-export">
-            <h3 style="color:var(--gold); margin-top:0;">EXPORTAR</h3>
-            <p id="aviso-tipo-fundo" style="font-size:11px; color:#999; margin-bottom:15px;"></p>
+            <h3 style="color:var(--gold); margin-top:0; text-transform:uppercase; letter-spacing:1px;">Exportar Projeto</h3>
+            <p id="aviso-tipo-fundo" style="font-size:12px; color:#999; margin-bottom:20px; line-height:1.4;"></p>
             
-            <button class="btn-opt" style="background:#3b82f6; color:white;" onclick="baixarFoto()">
-                📸 SALVAR IMAGEM (JPG)
+            <button id="btn-dl-img" class="btn-opt" style="background:var(--blue); color:white;" onclick="baixarFoto()">
+                <i class="fas fa-camera-retro"></i> SALVAR COMO IMAGEM
             </button>
             
-            <button class="btn-opt" style="background:var(--red); color:white;" onclick="iniciarGravacao(15)">
-                🎥 VÍDEO STORY (15s)
+            <div style="width:100%; height:1px; background:#333; margin:15px 0;"></div>
+            
+            <button id="btn-dl-vid-15" class="btn-opt" style="background:var(--red); color:white;" onclick="iniciarGravacao(15)">
+                <i class="fas fa-video"></i> GRAVAR STORY (15s)
             </button>
             
-            <button class="btn-opt" style="background:var(--red); color:white;" onclick="iniciarGravacao(30)">
-                🎥 VÍDEO STATUS (30s)
+            <button id="btn-dl-vid-30" class="btn-opt" style="background:var(--red); color:white;" onclick="iniciarGravacao(30)">
+                <i class="fas fa-video"></i> GRAVAR STATUS (30s)
             </button>
 
-            <button class="btn-opt" style="background:#333; color:#ccc; margin-top:15px;" onclick="document.getElementById('modal-export').style.display='none'">CANCELAR</button>
+            <button class="btn-opt" style="background:#222; color:#888; margin-top:15px; border:1px solid #333;" onclick="document.getElementById('modal-export').style.display='none'">
+                CANCELAR
+            </button>
         </div>
     </div>
 
     <script>
-        /* --- JDP ENGINE v2.0 - ANDROID SAFE --- */
+        /* --- JDP ENGINE v2.1 - HYPER-DRIVE CORE --- */
         
         let elementoSelecionado = null;
         let offset = { x: 0, y: 0 };
@@ -226,7 +251,7 @@
             const layer = document.getElementById('layer-fundo');
             layer.innerHTML = ''; 
             layer.style.background = cor; 
-            layer.setAttribute('data-tipo', 'cor'); // Marca como cor
+            layer.setAttribute('data-tipo', 'cor');
             toggleMenuFundo();
         }
 
@@ -238,10 +263,10 @@
             
             if(tipo === 'video') {
                 layer.innerHTML = `<video id="video-bg" src="${url}" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover;"></video>`;
-                layer.setAttribute('data-tipo', 'video'); // Marca como vídeo
+                layer.setAttribute('data-tipo', 'video');
             } else {
                 layer.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">`;
-                layer.setAttribute('data-tipo', 'imagem'); // Marca como imagem
+                layer.setAttribute('data-tipo', 'imagem');
             }
             toggleMenuFundo();
         }
@@ -252,7 +277,7 @@
             div.style.top = '30%'; div.style.left = '30%';
             if(tipo === 'midia') { div.style.width = '200px'; div.style.height = 'auto'; }
             
-            const btnX = document.createElement('div'); btnX.className = 'btn-fechar-item'; btnX.innerText = 'X';
+            const btnX = document.createElement('div'); btnX.className = 'btn-fechar-item'; btnX.innerHTML = '<i class="fas fa-times"></i>';
             btnX.onclick = (e) => { e.stopPropagation(); div.remove(); document.getElementById('controle-zoom').style.display='none'; };
             
             div.innerHTML = conteudoHTML; div.appendChild(btnX);
@@ -281,17 +306,17 @@
         /* --- INTERAÇÃO --- */
         function configurarInteracao(el) {
             el.addEventListener('touchstart', (e) => {
-                if(e.target.className === 'btn-fechar-item' || modoGravacaoAtivo) return;
+                if(e.target.closest('.btn-fechar-item') || modoGravacaoAtivo) return;
                 selecionarElemento(el);
                 const touch = e.touches[0]; offset.x = touch.clientX - el.offsetLeft; offset.y = touch.clientY - el.offsetTop;
             });
-            el.addEventListener('touchmove', (e) => {
-                 if(modoGravacaoAtivo) return;
+            el.addEventListener('touchmove', (e) => { 
+                if(modoGravacaoAtivo) return;
                 e.preventDefault(); const touch = e.touches[0];
                 el.style.left = (touch.clientX - offset.x) + 'px'; el.style.top = (touch.clientY - offset.y) + 'px';
             });
             el.addEventListener('mousedown', (e) => {
-                if(e.target.className === 'btn-fechar-item' || modoGravacaoAtivo) return;
+                if(e.target.closest('.btn-fechar-item') || modoGravacaoAtivo) return;
                 selecionarElemento(el); offset.x = e.clientX - el.offsetLeft; offset.y = e.clientY - el.offsetTop;
                 document.onmousemove = (ev) => { ev.preventDefault(); el.style.left = (ev.clientX - offset.x) + 'px'; el.style.top = (ev.clientY - offset.y) + 'px'; };
                 document.onmouseup = () => { document.onmousemove = null; document.onmouseup = null; };
@@ -325,63 +350,93 @@
             const aviso = document.getElementById('aviso-tipo-fundo');
             
             if(tipoFundo === 'video') {
-                aviso.innerText = "⚠️ Fundo de VÍDEO detectado. A opção 'Salvar Imagem' pode gerar uma tela preta. Recomendamos 'Gravar Vídeo'.";
+                aviso.innerHTML = "<i class='fas fa-exclamation-triangle'></i> Fundo de VÍDEO detectado.<br>Para salvar com movimento, use as opções vermelhas (Gravar).";
                 aviso.style.color = "#f59e0b";
             } else {
-                aviso.innerText = "Fundo estático. Todas as opções disponíveis.";
+                aviso.innerText = "Fundo estático. Você pode salvar como imagem ou vídeo.";
                 aviso.style.color = "#999";
             }
             document.getElementById('modal-export').style.display = 'flex';
         }
 
+        /* --- DOWNLOADER DE IMAGEM (BLOB FIX) --- */
         function baixarFoto() {
+            const btn = document.getElementById('btn-dl-img');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<div class="loader"></div> Processando...`;
+            
             const tipoFundo = document.getElementById('layer-fundo').getAttribute('data-tipo');
             if(tipoFundo === 'video') {
-                if(!confirm("⚠️ ATENÇÃO: Você tem um vídeo no fundo. Salvar como FOTO pode resultar em um fundo preto. Deseja continuar mesmo assim?")) return;
+                if(!confirm("⚠️ ATENÇÃO: Fundo de vídeo detectado. A imagem será estática (pode ficar preta). Continuar?")) {
+                    btn.innerHTML = originalText;
+                    return;
+                }
             }
 
             document.getElementById('modal-export').style.display = 'none';
             prepararCaptura();
             
             setTimeout(() => {
-                html2canvas(document.getElementById('palco-criacao'), { backgroundColor: null, useCORS: true, scale: 2 }).then(canvas => {
-                    const link = document.createElement('a'); link.download = 'jdp-arte.jpg'; link.href = canvas.toDataURL('image/jpeg', 0.9); link.click();
+                html2canvas(document.getElementById('palco-criacao'), { 
+                    backgroundColor: null, 
+                    useCORS: true, 
+                    scale: 2,
+                    allowTaint: true
+                }).then(canvas => {
+                    canvas.toBlob(function(blob) {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.download = `JDP_Arte_${Date.now()}.jpg`;
+                        link.href = url;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        
+                        restaurarUI();
+                        btn.innerHTML = originalText;
+                    }, 'image/jpeg', 0.9);
+                }).catch(err => {
+                    alert("Erro ao gerar imagem: " + err);
                     restaurarUI();
+                    btn.innerHTML = originalText;
                 });
             }, 500);
         }
 
-        /* --- MOTOR DE GRAVAÇÃO (ANDROID SAFE) --- */
+        /* --- MOTOR DE GRAVAÇÃO (HYPER-DRIVE VIDEO) --- */
         async function iniciarGravacao(segundos) {
             document.getElementById('modal-export').style.display = 'none';
             
             try {
-                // 1. Solicita captura de tela com áudio
+                // 1. Solicita captura de tela (Obrigatório interação do usuário)
+                // Nota: Em mobile, isso pede permissão do sistema.
                 const stream = await navigator.mediaDevices.getDisplayMedia({ 
-                    video: { mediaSource: "screen" }, 
+                    video: { 
+                        mediaSource: "screen",
+                        displaySurface: "browser", // Tenta focar na aba
+                    }, 
                     audio: true 
                 });
                 
                 modoGravacaoAtivo = true;
                 prepararCaptura();
                 
-                // 2. SINCRONIZAÇÃO: Reinicia o vídeo de fundo para começar junto com a gravação
+                // 2. SINCRONIZAÇÃO
                 const bgVideo = document.getElementById('video-bg');
-                if(bgVideo) {
-                    bgVideo.currentTime = 0;
-                    bgVideo.play();
-                }
+                if(bgVideo) { bgVideo.currentTime = 0; bgVideo.play(); }
 
-                // 3. Toca áudio e vídeos extras
-                const audio = document.getElementById('audio-player'); if(audio.src) audio.play();
+                const audio = document.getElementById('audio-player'); 
+                if(audio.src) { audio.currentTime = 0; audio.play(); }
+                
                 document.querySelectorAll('video').forEach(v => { if(v.id !== 'video-bg') v.play(); });
 
-                // 4. Configura Gravador com MimeType compatível (Tentativa MP4 -> WebM)
+                // 3. Configura Codecs (Prioridade para compatibilidade Mobile)
                 let options = { mimeType: 'video/webm;codecs=vp9' };
                 if (MediaRecorder.isTypeSupported('video/mp4')) {
                     options = { mimeType: 'video/mp4' };
                 } else if (MediaRecorder.isTypeSupported('video/webm;codecs=h264')) {
-                    options = { mimeType: 'video/webm;codecs=h264' }; // Melhor para Android se MP4 nativo falhar
+                    options = { mimeType: 'video/webm;codecs=h264' };
                 }
 
                 mediaRecorder = new MediaRecorder(stream, options);
@@ -390,25 +445,31 @@
                 mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
                 
                 mediaRecorder.onstop = () => {
-                    // Cria o arquivo final
+                    // GERAÇÃO DO ARQUIVO FINAL (BLOB SAFE)
                     const blob = new Blob(recordedChunks, { type: options.mimeType });
                     const url = URL.createObjectURL(blob);
+                    
                     const a = document.createElement("a");
                     a.style.display = "none";
                     a.href = url;
                     
-                    // TRUQUE PARA ANDROID: Se for WebM, tentamos nomear .mp4 se o codec for h264, 
-                    // mas para segurança, mantemos .webm se for vp8/9.
-                    // O Android moderno lê .webm, mas o WhatsApp as vezes reclama.
-                    a.download = `jdp-video-${segundos}s.webm`; 
+                    // Define extensão baseada no tipo suportado
+                    const ext = options.mimeType.includes('mp4') ? 'mp4' : 'webm';
+                    a.download = `JDP_Video_${Date.now()}.${ext}`;
                     
                     document.body.appendChild(a);
                     a.click();
-                    window.URL.revokeObjectURL(url);
+                    
+                    // Limpeza
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    }, 100);
+
                     stream.getTracks().forEach(track => track.stop());
                     restaurarUI();
                     
-                    alert("✅ VÍDEO SALVO!\nSe o WhatsApp não aceitar o arquivo, use um app 'Conversor de Vídeo' para MP4.");
+                    alert("✅ DOWNLOAD INICIADO!\nVerifique sua galeria ou pasta de downloads.");
                 };
 
                 mediaRecorder.start();
@@ -421,16 +482,28 @@
                 const intervalo = setInterval(() => {
                     tempoRestante--;
                     document.getElementById('timer-rec').innerText = tempoRestante < 10 ? '0'+tempoRestante : tempoRestante;
+                    
+                    // Se o usuário parar a gravação manualmente pelo sistema
+                    if(stream.getVideoTracks()[0].readyState === 'ended') {
+                        clearInterval(intervalo);
+                        if(mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+                    }
+
                     if(tempoRestante <= 0) {
                         clearInterval(intervalo);
-                        mediaRecorder.stop();
+                        if(mediaRecorder.state !== 'inactive') mediaRecorder.stop();
                     }
                 }, 1000);
 
             } catch (err) {
                 console.error(err);
-                alert("⚠️ Erro ao iniciar gravação.\nCertifique-se de conceder permissão de compartilhamento de tela.");
                 restaurarUI();
+                // Mensagem amigável para erro de permissão
+                if(err.name === 'NotAllowedError') {
+                    alert("⚠️ Gravação Cancelada.\nVocê precisa permitir o compartilhamento de tela para gravar o vídeo.");
+                } else {
+                    alert("⚠️ Erro Técnico: " + err.message + "\nTente usar um navegador diferente (Chrome/Edge).");
+                }
             }
         }
 
